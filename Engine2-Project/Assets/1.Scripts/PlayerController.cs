@@ -1,5 +1,6 @@
 using Cinemachine;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -19,11 +20,20 @@ public class PlayerController : MonoBehaviour
     private Vector3 velocity;
     public bool isGrounded;
 
+    public Vector3 offset = new Vector3(0, 2f, 0);
+    public Slider hpSlider;
+    public int maxHP = 10;
+    public int currentHP;
+
     private void Start()
     {
         Instance = this;
         controller = GetComponent<CharacterController>();
         pov = cam.GetCinemachineComponent<CinemachinePOV>();
+
+        currentHP = maxHP;
+        hpSlider.maxValue = maxHP;
+        hpSlider.value = currentHP;
     }
 
     private void Update()
@@ -51,6 +61,17 @@ public class PlayerController : MonoBehaviour
             cam.m_Lens.FieldOfView = Mathf.Lerp(cam.m_Lens.FieldOfView, originalFOV, Time.deltaTime * 1.5f);
         }
 
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            pov.m_HorizontalAxis.Value = transform.eulerAngles.y;
+            pov.m_VerticalAxis.Value = 0f;
+        }
+
+        Vector3 worldPosition = transform.position + offset;
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
+
+        hpSlider.GetComponent<RectTransform>().position = screenPos;
+
         #region 시네머신
         Vector3 camFoward = cam.transform.forward;
         camFoward.y = 0;
@@ -77,6 +98,22 @@ public class PlayerController : MonoBehaviour
             velocity.y = jumpPower;
         }
         #endregion
+    }
+
+    public void TakeDmaage(int damage)
+    {
+        currentHP -= damage;
+        hpSlider.value = currentHP;
+        if (currentHP <= 0)
+        {
+            Die();
+        }
+    }
+
+    void Die()
+    {
+        Debug.Log("사망");
+        Destroy(gameObject);
     }
 
 }
